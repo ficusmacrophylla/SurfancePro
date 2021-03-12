@@ -1,6 +1,12 @@
-//using some code and tuning settings from wonderful Federico Dossena Work 
+//using some code and tuning settings from Federico Dossena Work (GPL license)
 //https://fdossena.com/?p=ArduinoFanControl/i.md
-//actually using only PWM timer 1 ports (9-10) on a XX Board
+//reading part from Charles Gantt (since federico's one was faulty)
+//http://themakersworkbench.com
+//actually using only PWM timer 1 ports (9-10) on a CH341 Nano Arduino Clone Board
+//setting up a pull-up resistor 10kOhm on pin D2
+    //To disable interrupts: cli(); disable global interrupts and
+    //to enable them: sei(); enable interrupts
+//NOTE: I'm Assuming you are using the same fan model.
 
 #define PIN_SENSE 2 //where we connected the fan sense pin. Must be an interrupt capable pin (2 or 3 on Arduino Uno)
 #define DEBOUNCE 0 //0 is fine for most fans, crappy fans may require 10 or 20 to filter out noise
@@ -9,11 +15,18 @@
 //Interrupt handler. Stores the timestamps of the last 2 interrupts and handles debouncing
 unsigned long volatile ts1=0,ts2=0;
 
+//VARIABLES
 String inputFanSpeed;
 float dutyVal;
 String delayS;
 int delayT;
 int i;
+//This is the varible used to select the fan and it's divider,
+    //set 1 for unipole hall effect sensor
+    //and 2 for bipole hall effect sensor
+unsigned int fanDiv = 2;
+
+int NbTopsFan; int Calc;
 
 void tachISR() {
     unsigned long m=millis();
@@ -25,7 +38,9 @@ void tachISR() {
 //Calculates the RPM based on the timestamps of the last 2 interrupts. Can be called at any time.
 unsigned long calcRPM(){
     if(millis()-ts2<FANSTUCK_THRESHOLD&&ts2!=0){
-        return (60000/(ts2-ts1))/2;
+        unsigned long res;
+        res = (60000/(ts2-ts1))/2;
+        return res;
     }else return 0;
 }
 
@@ -46,14 +61,36 @@ void setPWM1A(float f){
 }
 
 float convertToDutyCycle(int percentage){
-    return percentage / 100;
+    float dutyConversion;
+    
+    dutyConversion = percentage;
+    Serial.print(dutyConversion);
+    dutyConversion = dutyConversion / 100;
+    return dutyConversion;
 
 }
+
+void CalcRpm(){
+    NbTopsFan = 0; //Set NbTops to 0 ready for calculations
+    sei(); //Enables interrupts
+    delay(1000); //wait 1 sec.
+    cli(); //Disable interrupts
+    //Times NbTopsFan (which is apprioxiamately the fequency the fan 
+    //is spinning at) by 60 seconds before dividing by the fan's divider
+    Calc = ((NbTopsFan * 60)/fanDiv);
+    sei(); //re-enabling interrupts to allow other functions
+    Serial.print (Calc, DEC);//Prints the number calculated above   
+    Serial.print (" rpm\r\n"); //Prints " rpm" and a new line
+}
+
+void rpmCount ()
+//This is the function that the interupt calls
+{ NbTopsFan++; }
 
 void setup(){
     //enable outputs for Timer 1
     pinMode(9,OUTPUT); //1A
-    pinMode(5, OUTPUT); //on-off auto-switch
+    //pinMode(5, OUTPUT); //on-off auto-switch
     //pinMode(10,OUTPUT); //1B
     setupTimer1();
     //enable outputs for Timer 2
@@ -62,12 +99,12 @@ void setup(){
     //note that pin 11 will be unavailable for output in this mode!
 
     pinMode(PIN_SENSE,INPUT_PULLUP); //set the sense pin as input with pullup resistor
-    attachInterrupt(digitalPinToInterrupt(PIN_SENSE),tachISR,FALLING); //set tachISR to be triggered when the signal on the sense pin goes low
+   // attachInterrupt(digitalPinToInterrupt(PIN_SENSE),tachISR,FALLING); //set tachISR to be triggered when the signal on the sense pin goes low
+    attachInterrupt(digitalPinToInterrupt(PIN_SENSE),rpmCount,RISING); //set tachISR to be triggered when the signal on the sense pin goes low
     Serial.begin(9600); //enable serial so we can see the RPM in the serial monitor
-    digitalWrite(5,HIGH); //spengo
-
+    //digitalWrite(5,HIGH); //spengo
 }
-void loop(){
+void loop(){   
     Serial.println("Set Fan Speed (10-100): ");
     while (Serial.available() == 0)
    /* just wait */ ;
@@ -76,10 +113,10 @@ void loop(){
  
     //delay(2000);
     inputFanSpeed = Serial.readString();    
-    Serial.println("Readed: ");
-    Serial.print(inputFanSpeed);
+    Serial.print("Readed: ");
+    Serial.println(inputFanSpeed);
 
-    Serial.println("Set Duration (number of 4sec. slots to try) ");
+    Serial.print("Set Duration (number of 4sec. slots to try) ");
     while (Serial.available() == 0)
    /* just wait */ ;
 
@@ -87,93 +124,25 @@ void loop(){
  
     //delay(2000);
     delayS = Serial.readString();    
-    Serial.println("Readed: ");
-    Serial.print(delayS.toInt());
+    Serial.print("Readed: ");
+    Serial.println(delayS.toInt());
     delayT = delayS.toInt();
 
     dutyVal = convertToDutyCycle(inputFanSpeed.toInt());
-    Serial.println("Readed DutyVal: ");
-    Serial.print(dutyVal);
-    setPWM1A((float)dutyVal);
+    Serial.print("Readed DutyVal: ");
+    Serial.println(dutyVal);
+    setPWM1A(dutyVal);
     i=0;
     while(i != delayT)
     {
-        delay(DELAYTIME);
-        Serial.print(" - RPM:");
-        Serial.println(calcRPM());
+        
+        CalcRpm(); //reads RPM
+        
+
         i++;
     }
+    //delay(DELAYTIME);
     
-
-// switch(inputFanSpeed) {
-//     case "0":
-//     Serial.print("Set Duty to 0% ");
-//     setPWM1A(0.0f); //set duty to 50% on pin 9
-//     //digitalWrite(5,LOW); //spengo
-//     break;
-//     case '10':
-//     Serial.print("Set Duty to 10% ");
-//     setPWM1A(0.1f); //set duty to 50% on pin 9
-//     break;
-//     case '20':
-//     Serial.print("Set Duty to 20% then measure \n");
-//     setPWM1A(0.2f); //set duty to 50% on pin 9
-//     break;
-//     case '50':
-//     Serial.print("Set Duty to 50% then measure \n");
-//     setPWM1A(0.5f); //set duty to 50% on pin 9
-
-//     break;
-//     case '70':
-//     Serial.print("Set Duty to 70% then measure \n");
-//     setPWM1A(0.7f); //set duty to 50% on pin 9
-//     break;
-//     case '100':
-//     Serial.print("Set Duty to 100% then measure \n");
-//     setPWM1A(1.0f); //set duty to 50% on pin 9
-
-//     break;
-//     case 'M':
-//     delay(DELAYTIME);
-//     Serial.print(" - RPM:");
-//     Serial.println(calcRPM());
-//     delay(DELAYTIME);
-//     Serial.print(" - RPM:");
-//     Serial.println(calcRPM());
-//     break;
-// }
-
-
-    //example...
-    //setPWM1B(0.2f); //set duty to 20% on pin 10
-    //setPWM2(0.8f); //set duty to 80% on pin 3
-
-
-//reading RPM
-    
-
-    //example...
-    //setPWM1B(0.2f); //set duty to 20% on pin 10
-    //setPWM2(0.8f); //set duty to 80% on pin 3
-
-
-
-
-    //example...
-    //setPWM1B(0.2f); //set duty to 20% on pin 10
-    //setPWM2(0.8f); //set duty to 80% on pin 3
-
-
-
-
-    //example...
-    //setPWM1B(0.2f); //set duty to 20% on pin 10
-    //setPWM2(0.8f); //set duty to 80% on pin 3
-
-
-    //example...
-    //setPWM1B(0.2f); //set duty to 20% on pin 10
-    //setPWM2(0.8f); //set duty to 80% on pin 3
 
 
 
