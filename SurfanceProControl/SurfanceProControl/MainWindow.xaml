@@ -1,0 +1,33 @@
+﻿<Window x:Class="SurfanceProControl.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SurfanceProControl"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <RadioButton Content="Automatic&#xD;&#xA;" HorizontalAlignment="Left" Margin="116,41,0,0" VerticalAlignment="Top"/>
+        <RadioButton Content="Manual" HorizontalAlignment="Left" Margin="194,41,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.675,0.413"/>
+        <Button Content="Start" HorizontalAlignment="Left" Margin="432,41,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
+        <Button Content="Stop" HorizontalAlignment="Left" Margin="534,39,0,0" VerticalAlignment="Top" Width="75"/>
+        <Slider HorizontalAlignment="Left" Margin="140,181,0,0" VerticalAlignment="Top" Width="100"/>
+        <Label Content="Fan Speed RPM&#xD;&#xA;" HorizontalAlignment="Left" Margin="37,302,0,0" VerticalAlignment="Top"/>
+        <ListBox HorizontalAlignment="Left" Height="118" Margin="328,246,0,0" VerticalAlignment="Top" Width="419">
+            <ListBox Height="161" Width="409"/>
+        </ListBox>
+        <Label Content="Parameters&#xD;&#xA;" HorizontalAlignment="Left" Margin="37,264,0,0" VerticalAlignment="Top"/>
+        <Label Content="Set Fan Speed&#xD;&#xA;" HorizontalAlignment="Left" Margin="37,181,0,0" VerticalAlignment="Top"/>
+        <Label Content="COM Port&#xD;&#xA;" HorizontalAlignment="Left" Margin="358,96,0,0" VerticalAlignment="Top" Width="91" Height="22"/>
+        <Label Content="Operativity" HorizontalAlignment="Left" Margin="358,39,0,0" VerticalAlignment="Top"/>
+        <Label Content="Working Mode&#xD;&#xA;" HorizontalAlignment="Left" Margin="17,41,0,0" VerticalAlignment="Top"/>
+        <Label Content="Package Temperature C&#xA;" HorizontalAlignment="Left" Margin="37,340,0,0" VerticalAlignment="Top"/>
+        <CheckBox Content="Enable Log" HorizontalAlignment="Left" Margin="655,39,0,0" VerticalAlignment="Top"/>
+        <ComboBox HorizontalAlignment="Left" Margin="432,96,0,0" VerticalAlignment="Top" Width="120"/>
+        <Label Content="Status&#xA;" HorizontalAlignment="Left" Margin="579,96,0,0" VerticalAlignment="Top" Width="41" Height="22"/>
+        <Label Content="N.A.&#xA;" HorizontalAlignment="Left" Margin="199,302,0,0" VerticalAlignment="Top" Width="41" Height="22"/>
+        <Label Content="N.A.&#xA;" HorizontalAlignment="Left" Margin="199,340,0,0" VerticalAlignment="Top" Width="41" Height="22"/>
+        <Label Content="N.A.&#xA;" HorizontalAlignment="Left" Margin="625,96,0,0" VerticalAlignment="Top" Width="41" Height="22"/>
+
+    </Grid>
+</Window>
