@@ -37,8 +37,8 @@ namespace SurfanceProControl
             
             InitializeComponent();
             LoadCOMPorts();
-            CpuTemperatureReader tempReader = new CpuTemperatureReader();
-            var temps = tempReader.GetTemperaturesInCelsius();
+            //CpuTemperatureReader tempReader = new CpuTemperatureReader();
+            //var temps = tempReader.GetTemperaturesInCelsius();
         }
 
         private void LoadCOMPorts()
