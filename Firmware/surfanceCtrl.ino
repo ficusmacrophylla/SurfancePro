@@ -12,15 +12,17 @@
 #define DEBOUNCE 0 //0 is fine for most fans, crappy fans may require 10 or 20 to filter out noise
 #define FANSTUCK_THRESHOLD 500 //if no interrupts were received for 500ms, consider the fan as stuck and report 0 RPM
 #define DELAYTIME 4000 //milliseconds to wait
+#define REDPIN 4
+#define GREENPIN 5
+#define BLUEPIN 6
 //Interrupt handler. Stores the timestamps of the last 2 interrupts and handles debouncing
 unsigned long volatile ts1=0,ts2=0;
 
 //VARIABLES
-String inputFanSpeed;
+String inputFanSpeed, LightsCommand,delayS;
 float dutyVal;
-String delayS;
-int delayT;
-int i;
+int delayT, i, input;
+int redVal = 0, greenVal = 0, blueVal = 0;
 //This is the varible used to select the fan and it's divider,
     //set 1 for unipole hall effect sensor
     //and 2 for bipole hall effect sensor
@@ -83,33 +85,40 @@ void CalcRpm(){
     Serial.print (" rpm\r\n"); //Prints " rpm" and a new line
 }
 
-void rpmCount ()
-//This is the function that the interupt calls
-{ NbTopsFan++; }
+void SetLight(){
+    Serial.print("Select Light Color: (RED/GREEN/BLUE/WHITE/OFF) \n");
+    while (Serial.available() == 0);
 
-void setup(){
-    //enable outputs for Timer 1
-    pinMode(9,OUTPUT); //1A
-    //pinMode(5, OUTPUT); //on-off auto-switch
-    //pinMode(10,OUTPUT); //1B
-    setupTimer1();
-    //enable outputs for Timer 2
-    //pinMode(3,OUTPUT); //2
-    //setupTimer2();
-    //note that pin 11 will be unavailable for output in this mode!
+    LightsCommand = Serial.readString();
+    if (LightsCommand == "RED")
+        redVal = 255;
+    else if (LightsCommand == "GREEN")
+        greenVal  = 255;
+    else if (LightsCommand == "BLUE")
+        blueVal = 255;
+    else if (LightsCommand == "WHITE"){
+        redVal = 255;
+        blueVal = 255;
+        greenVal = 255;
+    }
+    else if (LightsCommand == "OFF"){
+        redVal = 0;
+        blueVal = 0;
+        greenVal = 0;
+    }else
+        Serial.println("Wrong Input");
 
-    pinMode(PIN_SENSE,INPUT_PULLUP); //set the sense pin as input with pullup resistor
-   // attachInterrupt(digitalPinToInterrupt(PIN_SENSE),tachISR,FALLING); //set tachISR to be triggered when the signal on the sense pin goes low
-    attachInterrupt(digitalPinToInterrupt(PIN_SENSE),rpmCount,RISING); //set tachISR to be triggered when the signal on the sense pin goes low
-    Serial.begin(9600); //enable serial so we can see the RPM in the serial monitor
-    //digitalWrite(5,HIGH); //spengo
+    analogWrite(REDPIN, redVal);
+    analogWrite(GREENPIN, greenVal);
+    analogWrite(BLUEPIN, blueVal);
 }
-void loop(){   
+
+void setFanSpeed(){
     Serial.println("Set Fan Speed (10-100): ");
     while (Serial.available() == 0)
    /* just wait */ ;
 
-/* read the incoming byte*/
+    /* read the incoming byte*/
  
     //delay(2000);
     inputFanSpeed = Serial.readString();    
@@ -120,7 +129,7 @@ void loop(){
     while (Serial.available() == 0)
    /* just wait */ ;
 
-/* read the incoming byte*/
+    /* read the incoming byte*/
  
     //delay(2000);
     delayS = Serial.readString();    
@@ -141,6 +150,48 @@ void loop(){
 
         i++;
     }
+}
+
+void rpmCount ()
+//This is the function that the interupt calls
+{ NbTopsFan++; }
+
+void setup(){
+    //enable outputs for Timer 1
+    pinMode(9,OUTPUT); //1A
+    pinMode(REDPIN, OUTPUT);
+    pinMode(GREENPIN, OUTPUT);
+    pinMode(BLUEPIN, OUTPUT);
+    //pinMode(5, OUTPUT); //on-off auto-switch
+    //pinMode(10,OUTPUT); //1B
+    setupTimer1();
+    //enable outputs for Timer 2
+    //pinMode(3,OUTPUT); //2
+    //setupTimer2();
+    //note that pin 11 will be unavailable for output in this mode!
+
+    pinMode(PIN_SENSE,INPUT_PULLUP); //set the sense pin as input with pullup resistor
+   // attachInterrupt(digitalPinToInterrupt(PIN_SENSE),tachISR,FALLING); //set tachISR to be triggered when the signal on the sense pin goes low
+    attachInterrupt(digitalPinToInterrupt(PIN_SENSE),rpmCount,RISING); //set tachISR to be triggered when the signal on the sense pin goes low
+    Serial.begin(9600); //enable serial so we can see the RPM in the serial monitor
+    //digitalWrite(5,HIGH); //spengo
+    
+    
+
+
+    
+        
+}
+void loop(){   
+    Serial.println("1 : Fan Speed - 2 : Light Color \n");
+    while (Serial.available() == 0)
+   /* just wait */ ;
+   input = Serial.readString().toInt();
+   if(input == 1)
+        setFanSpeed();
+   else if(input == 2)
+        SetLight();
+    else;
     //delay(DELAYTIME);
     
 
