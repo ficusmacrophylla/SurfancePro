@@ -24,6 +24,7 @@ namespace SurfanceProControl
     public partial class MainWindow : Window
     {
         //VARS
+//CIAO
         bool AutoMode = false;
         bool ActiveFanCtrl = false;
         bool EnableLog = false;
